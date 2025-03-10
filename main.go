@@ -33,7 +33,7 @@ import (
 
 func main() {
 	// parse command line
-	portForwardArgs, subcommandArgs := splitArgs()
+	cliMode, wrapperArgs, subcommandArgs := splitArgs()
 
 	// setup async machinery
 	ctx, cancel := signal.NotifyContext(context.Background(), // once one subprocess returns, we cancel this ctx to reap the other one
@@ -46,7 +46,13 @@ func main() {
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		runKubectlPortForward(ctx, portForwardArgs, errChan, portReadableChan)
+		if cliMode == modeKubectlPortForward {
+			runKubectlPortForward(ctx, wrapperArgs, errChan, portReadableChan)
+		} else if cliMode == modeCloudSqlProxy {
+			runCloudSqlProxy(ctx, wrapperArgs, errChan, portReadableChan)
+		} else {
+			panic("unrecognised mode")
+		}
 	}()
 	go func() {
 		defer wg.Done()

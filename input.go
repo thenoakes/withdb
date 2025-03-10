@@ -24,11 +24,29 @@ import (
 	"os"
 )
 
-func splitArgs() (argsForPortForward, cmdline []string) {
+type mode string
+
+const (
+	modeUnspecified        mode = ""
+	modeKubectlPortForward mode = "port-forward"
+	modeCloudSqlProxy      mode = "cloud-proxy"
+)
+
+func splitArgs() (cliMode mode, argsForPortForward, cmdline []string) {
 	doubleDashIndex := -1
+	cliMode = modeUnspecified
+
 	for idx, arg := range os.Args {
 		if idx == 0 {
 			continue
+		}
+		if idx == 1 {
+			if arg == "--port-forward" {
+				cliMode = modeKubectlPortForward
+			}
+			if arg == "--cloud-proxy" {
+				cliMode = modeCloudSqlProxy
+			}
 		}
 		if arg == "--" {
 			doubleDashIndex = idx
@@ -39,17 +57,26 @@ func splitArgs() (argsForPortForward, cmdline []string) {
 		}
 	}
 
+	if cliMode == modeUnspecified {
+		usageError("missing `--port-forward` or `--cloud-proxy` argument")
+	}
+
+	description := "kubectl port-forward" // default
+	if cliMode == modeCloudSqlProxy {
+		description = "cloud_sql_proxy"
+	}
+
 	if doubleDashIndex == -1 {
 		usageError("missing `--` in argument list")
 	}
 	if doubleDashIndex == 1 {
-		usageError("missing arguments for `kubectl port-forward` (you need to put something before `--`)")
+		usageError("missing arguments for " + description + " (you need to put something before `--`)")
 	}
 	if doubleDashIndex == len(os.Args)-1 {
 		usageError("missing command line (you need to put something after `--`)")
 	}
 
-	return os.Args[1:doubleDashIndex], os.Args[doubleDashIndex+1:]
+	return cliMode, os.Args[2:doubleDashIndex], os.Args[doubleDashIndex+1:]
 }
 
 func usage(status int) {

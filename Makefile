@@ -36,10 +36,10 @@ GO_LDFLAGS =
 GO_TESTENV =
 GO_BUILDENV =
 
-build-all: build/with-kubectl-port-forward
+build-all: build/withdb
 
-build/with-kubectl-port-forward: FORCE
-	env $(GO_BUILDENV) go build $(GO_BUILDFLAGS) -ldflags '-s -w $(GO_LDFLAGS)' -o build/with-kubectl-port-forward .
+build/withdb: FORCE
+	env $(GO_BUILDENV) go build $(GO_BUILDFLAGS) -ldflags '-s -w $(GO_LDFLAGS)' -o build/withdb .
 
 DESTDIR =
 ifeq ($(shell uname -s),Darwin)
@@ -48,9 +48,9 @@ else
 	PREFIX = /usr
 endif
 
-install: FORCE build/with-kubectl-port-forward
+install: FORCE build/withdb
 	install -d -m 0755 "$(DESTDIR)$(PREFIX)/bin"
-	install -m 0755 build/with-kubectl-port-forward "$(DESTDIR)$(PREFIX)/bin/with-kubectl-port-forward"
+	install -m 0755 build/withdb "$(DESTDIR)$(PREFIX)/bin/withdb"
 
 # which packages to test with test runner
 GO_TESTPKGS := $(shell go list -f '{{if or .TestGoFiles .XTestGoFiles}}{{.ImportPath}}{{end}}' ./...)
@@ -111,8 +111,8 @@ check-dependency-licenses: FORCE install-go-licence-detector
 	@go list -m -mod=readonly -json all | go-licence-detector -includeIndirect -rules .license-scan-rules.json -overrides .license-scan-overrides.jsonl
 
 goimports: FORCE install-goimports
-	@printf "\e[1;36m>> goimports -w -local https://github.com/sapcc/with-kubectl-port-forward\e[0m\n"
-	@goimports -w -local github.com/sapcc/with-kubectl-port-forward $(patsubst $(shell awk '$$1 == "module" {print $$2}' go.mod)%,.%/*.go,$(shell go list ./...))
+	@printf "\e[1;36m>> goimports -w -local https://github.com/sapcc/withdb\e[0m\n"
+	@goimports -w -local github.com/sapcc/withdb $(patsubst $(shell awk '$$1 == "module" {print $$2}' go.mod)%,.%/*.go,$(shell go list ./...))
 
 clean: FORCE
 	git clean -dxf build
@@ -144,7 +144,7 @@ help: FORCE
 	@printf "\n"
 	@printf "\e[1mBuild\e[0m\n"
 	@printf "  \e[36mbuild-all\e[0m                        Build all binaries.\n"
-	@printf "  \e[36mbuild/with-kubectl-port-forward\e[0m  Build with-kubectl-port-forward.\n"
+	@printf "  \e[36mbuild/withdb\e[0m  Build withdb.\n"
 	@printf "  \e[36minstall\e[0m                          Install all binaries. This option understands the conventional 'DESTDIR' and 'PREFIX' environment variables for choosing install locations.\n"
 	@printf "\n"
 	@printf "\e[1mTest\e[0m\n"
