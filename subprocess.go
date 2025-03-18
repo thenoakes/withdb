@@ -33,7 +33,7 @@ func buildKubectlPortForwardCmdline(args []string) []string {
 }
 
 func buildCloudSqlProxyCmdline(args []string) []string {
-	return append([]string{"cloud_sql_proxy"}, args...)
+	return append([]string{"cloud-sql-proxy"}, args...)
 }
 
 func runKubectlPortForward(ctx context.Context, args []string, errChan chan<- error, portReadableChan chan<- struct{}) {
